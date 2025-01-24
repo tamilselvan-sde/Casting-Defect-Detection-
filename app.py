@@ -3,6 +3,7 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import load_model
 import numpy as np
 from PIL import Image
+import os
 
 # Ensure set_page_config is the first Streamlit command
 st.set_page_config(
@@ -12,15 +13,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load the trained model
-@st.cache_resource  # Cache the model to avoid reloading on every interaction
+# Cache the model loading process to avoid reloading during interactions
+@st.cache_resource
 def load_trained_model():
-    model = load_model('cnn_model.h5')
-    return model
+    # Ensure the model file is in the same directory as this script
+    model_path = os.path.join(os.getcwd(), 'cnn_model.h5')
+    if not os.path.exists(model_path):
+        st.error("Model file not found. Please ensure 'cnn_model.h5' is in the app directory.")
+        st.stop()
+    return load_model(model_path)
 
+# Load the model
 model = load_trained_model()
 
-# Class labels
+# Define class labels
 class_labels = {0: 'Not Defective', 1: 'Defective'}
 
 # App Title
