@@ -51,20 +51,37 @@ st.markdown(
         color: #009688;
         text-align: center;
     }
+    .summary {
+        font-size: 1.2em;
+        color: #555;
+        line-height: 1.6;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
 st.markdown('<h1 class="title">Casting Defect Detection 🔧</h1>', unsafe_allow_html=True)
+st.markdown(
+    """
+    Welcome to the **Casting Defect Detection** tool. This app uses a TensorFlow Lite model to classify casting products 
+    as either **Defective** or **Not Defective**. Choose one of the tabs below to upload an image, view default images, 
+    access the model summary, explore tech stacks, view documentation, or visit the GitHub repository.
+    """,
+    unsafe_allow_html=True
+)
 
 # Create Tabs
-tab1, tab2 = st.tabs(["Upload Image", "Default Images"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "Upload Image", "Default Images", "Model Summary", "Tech Stacks Used", "Documentation", "GitHub"
+])
 
+# Upload Image Tab
 with tab1:
     st.header("Upload an Image")
+    st.write("Upload your casting product image for defect detection.")
     uploaded_file = st.file_uploader(
-        "Upload a JPEG/PNG image for prediction:", 
+        "Upload a JPEG/PNG image:", 
         type=["jpg", "jpeg", "png"], 
         help="Upload a casting image to detect defects."
     )
@@ -96,9 +113,10 @@ with tab1:
         st.markdown('<h2 class="result">Prediction: {}</h2>'.format(result_label), unsafe_allow_html=True)
         st.markdown('<p class="confidence">Confidence: {:.2f}%</p>'.format(confidence), unsafe_allow_html=True)
 
+# Default Images Tab
 with tab2:
     st.header("Select a Default Image")
-    # List files in the current directory
+    st.write("Choose a test image from the available default images for prediction.")
     current_dir = os.getcwd()  # Get the current directory (same as app.py)
     jpeg_files = glob.glob(os.path.join(current_dir, "*.jpeg"))  # Search for .jpeg files
 
@@ -132,6 +150,88 @@ with tab2:
             st.markdown('<p class="confidence">Confidence: {:.2f}%</p>'.format(confidence), unsafe_allow_html=True)
     else:
         st.write("No default images found in the current directory.")
+
+# Model Summary Tab
+with tab3:
+    st.header("Model Summary")
+    st.markdown(
+        """
+        This tab provides information about the TensorFlow Lite model used for predictions.
+        Below is the input and output details of the loaded model:
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Display Input Details
+    st.subheader("Input Details")
+    for input_detail in input_details:
+        st.markdown(
+            f"""
+            - **Name**: {input_detail['name']}
+            - **Shape**: {input_detail['shape']}
+            - **Data Type**: {input_detail['dtype']}
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Display Output Details
+    st.subheader("Output Details")
+    for output_detail in output_details:
+        st.markdown(
+            f"""
+            - **Name**: {output_detail['name']}
+            - **Shape**: {output_detail['shape']}
+            - **Data Type**: {output_detail['dtype']}
+            """,
+            unsafe_allow_html=True
+        )
+
+# Tech Stacks Tab
+with tab4:
+    st.header("Tech Stacks Used")
+    st.write("This project is built using the following technologies:")
+
+    tech_stacks = [
+        {"name": "TensorFlow", "logo": "https://www.tensorflow.org/images/tf_logo_social.png"},
+        {"name": "Keras", "logo": "https://keras.io/img/logo-small.png"},
+        {"name": "NumPy", "logo": "https://upload.wikimedia.org/wikipedia/commons/3/31/NumPy_logo_2020.svg"},
+        {"name": "Scikit-learn", "logo": "https://upload.wikimedia.org/wikipedia/commons/0/05/Scikit_learn_logo_small.svg"},
+        {"name": "Pandas", "logo": "https://pandas.pydata.org/static/img/pandas_white.svg"},
+        {"name": "Matplotlib", "logo": "https://matplotlib.org/stable/_static/logo2_compressed.svg"},
+        {"name": "Streamlit", "logo": "https://streamlit.io/images/brand/streamlit-logo-primary-colormark-lighttext.png"},
+        {"name": "GitHub", "logo": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"},
+        {"name": "MLflow", "logo": "https://mlflow.org/docs/latest/_static/MLflow-logo-final-black.png"},
+        {"name": "Kafka", "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Apache_kafka-icon.svg"},
+        {"name": "Docker", "logo": "https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png"}
+    ]
+
+    cols = st.columns(3)  # Create a 3-column layout
+    for i, tech in enumerate(tech_stacks):
+        with cols[i % 3]:  # Distribute logos across the columns
+            st.image(tech["logo"], width=100)
+            st.markdown(f"**{tech['name']}**")
+
+# Documentation Tab
+with tab5:
+    st.header("Documentation")
+    st.markdown(
+        """
+        Access the full documentation for this project by clicking the link below:
+        - [Project Documentation](https://docs.google.com/document/d/1LpcYPT0w4vP473ERT9twR7Jtwt7H7WgCufTlPOhAYUI/edit?usp=sharing)
+        """,
+        unsafe_allow_html=True
+    )
+
+# GitHub Tab
+with tab6:
+    st.header("GitHub Repository")
+    st.markdown(
+        """
+        View the source code and contribute to this project by visiting the GitHub repository:
+        - [GitHub Repository](https://github.com/tamilselvan-sde/Casting-Defect-Detection-/tree/main)
+        """,
+        unsafe_allow_html=True
+    )
 
 # Footer
 st.markdown(
