@@ -3,6 +3,8 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
 import numpy as np
+import os
+import glob
 
 # Ensure set_page_config is the first Streamlit command
 st.set_page_config(
@@ -65,14 +67,30 @@ uploaded_files = st.file_uploader(
     help="Upload casting images to detect defects."
 )
 
-if uploaded_files:
-    for uploaded_file in uploaded_files:
-        # Display each uploaded image
-        st.image(uploaded_file, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
+# List files in the current directory
+current_dir = os.getcwd()  # Get the current directory (same as app.py)
+jpeg_files = glob.glob(os.path.join(current_dir, "*.jpeg"))  # Search for .jpeg files
+
+# Process selected or uploaded files
+selected_file = None
+if not uploaded_files and jpeg_files:
+    st.write("No files uploaded. Select a test image from the current directory:")
+    selected_file = st.selectbox("Available Test Images", jpeg_files)  # Allow user to select a file
+
+if uploaded_files or selected_file:
+    files_to_process = uploaded_files if uploaded_files else [selected_file]
+
+    for file in files_to_process:
+        # Handle files: uploaded file or selected from directory
+        if uploaded_files:
+            image = Image.open(file)  # Open directly from uploaded files
+        else:
+            image = Image.open(file)  # Open the selected file path
+
+        st.image(image, caption=f"Test Image: {os.path.basename(file)}", use_column_width=True)
 
         # Preprocess the image
         img_size = (128, 128)  # Ensure it matches the training input size
-        image = Image.open(uploaded_file)  # Open image with PIL
         image = image.resize(img_size)  # Resize to match model input
         img_array = img_to_array(image) / 255.0  # Normalize pixel values
         img_array = np.expand_dims(img_array, axis=0).astype(np.float32)  # Add batch dimension and convert to float32
@@ -96,7 +114,7 @@ if uploaded_files:
         st.markdown("---")  # Separator for each image
 
 else:
-    st.write("No files uploaded. Please upload one or more images to begin classification.")
+    st.write("No images available to process.")
 
 # Footer
 st.markdown(
