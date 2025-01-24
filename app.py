@@ -1,9 +1,8 @@
 import streamlit as st
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
-from tensorflow.keras.models import load_model
-import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
-import os
+import numpy as np
 
 # Ensure set_page_config is the first Streamlit command
 st.set_page_config(
@@ -13,20 +12,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Cache the model loading process to avoid reloading during interactions
+# Load the TensorFlow Lite model
 @st.cache_resource
-def load_trained_model():
-    # Ensure the model file is in the same directory as this script
-    model_path = os.path.join(os.getcwd(), 'cnn_model.h5')
-    if not os.path.exists(model_path):
-        st.error("Model file not found. Please ensure 'cnn_model.h5' is in the app directory.")
-        st.stop()
-    return load_model(model_path)
+def load_tflite_model():
+    tflite_model_path = 'cnn_model_quantized.tflite'
+    interpreter = tf.lite.Interpreter(model_path=tflite_model_path)
+    interpreter.allocate_tensors()
+    return interpreter
 
-# Load the model
-model = load_trained_model()
+interpreter = load_tflite_model()
 
-# Define class labels
+# Get input and output details from the TFLite model
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Class labels
 class_labels = {0: 'Not Defective', 1: 'Defective'}
 
 # App Title
@@ -74,11 +74,17 @@ if uploaded_files:
         img_size = (128, 128)  # Ensure it matches the training input size
         image = Image.open(uploaded_file)  # Open image with PIL
         image = image.resize(img_size)  # Resize to match model input
-        img_array = img_to_array(image) / 255.0  # Convert to array and normalize
-        img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+        img_array = img_to_array(image) / 255.0  # Normalize pixel values
+        img_array = np.expand_dims(img_array, axis=0).astype(np.float32)  # Add batch dimension and convert to float32
 
-        # Predict using the model
-        prediction = model.predict(img_array)
+        # Set input tensor
+        interpreter.set_tensor(input_details[0]['index'], img_array)
+
+        # Run inference
+        interpreter.invoke()
+
+        # Get output tensor
+        prediction = interpreter.get_tensor(output_details[0]['index'])
         predicted_class = np.argmax(prediction)  # Get class with highest probability
 
         # Display the result with confidence
