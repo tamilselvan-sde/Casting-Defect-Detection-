@@ -57,37 +57,21 @@ st.markdown(
 )
 
 st.markdown('<h1 class="title">Casting Defect Detection 🔧</h1>', unsafe_allow_html=True)
-st.write("Upload multiple images to classify them as **Defective** or **Not Defective**.")
 
-# File uploader to allow multiple uploads
-uploaded_files = st.file_uploader(
-    "Upload images (JPEG/PNG):", 
-    type=["jpg", "jpeg", "png"], 
-    accept_multiple_files=True,
-    help="Upload casting images to detect defects."
-)
+# Create Tabs
+tab1, tab2 = st.tabs(["Upload Image", "Default Images"])
 
-# List files in the current directory
-current_dir = os.getcwd()  # Get the current directory (same as app.py)
-jpeg_files = glob.glob(os.path.join(current_dir, "*.jpeg"))  # Search for .jpeg files
-
-# Process selected or uploaded files
-selected_file = None
-if not uploaded_files and jpeg_files:
-    st.write("No files uploaded. Select a test image from the current directory:")
-    selected_file = st.selectbox("Available Test Images", jpeg_files)  # Allow user to select a file
-
-if uploaded_files or selected_file:
-    files_to_process = uploaded_files if uploaded_files else [selected_file]
-
-    for file in files_to_process:
-        # Handle files: uploaded file or selected from directory
-        if uploaded_files:
-            image = Image.open(file)  # Open directly from uploaded files
-        else:
-            image = Image.open(file)  # Open the selected file path
-
-        st.image(image, caption=f"Test Image: {os.path.basename(file)}", use_column_width=True)
+with tab1:
+    st.header("Upload an Image")
+    uploaded_file = st.file_uploader(
+        "Upload a JPEG/PNG image for prediction:", 
+        type=["jpg", "jpeg", "png"], 
+        help="Upload a casting image to detect defects."
+    )
+    
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image", use_column_width=True)
 
         # Preprocess the image
         img_size = (128, 128)  # Ensure it matches the training input size
@@ -111,10 +95,43 @@ if uploaded_files or selected_file:
 
         st.markdown('<h2 class="result">Prediction: {}</h2>'.format(result_label), unsafe_allow_html=True)
         st.markdown('<p class="confidence">Confidence: {:.2f}%</p>'.format(confidence), unsafe_allow_html=True)
-        st.markdown("---")  # Separator for each image
 
-else:
-    st.write("No images available to process.")
+with tab2:
+    st.header("Select a Default Image")
+    # List files in the current directory
+    current_dir = os.getcwd()  # Get the current directory (same as app.py)
+    jpeg_files = glob.glob(os.path.join(current_dir, "*.jpeg"))  # Search for .jpeg files
+
+    if jpeg_files:
+        selected_file = st.selectbox("Available Default Images", jpeg_files)
+        if selected_file:
+            image = Image.open(selected_file)
+            st.image(image, caption=f"Default Image: {os.path.basename(selected_file)}", use_column_width=True)
+
+            # Preprocess the image
+            img_size = (128, 128)  # Ensure it matches the training input size
+            image = image.resize(img_size)  # Resize to match model input
+            img_array = img_to_array(image) / 255.0  # Normalize pixel values
+            img_array = np.expand_dims(img_array, axis=0).astype(np.float32)  # Add batch dimension and convert to float32
+
+            # Set input tensor
+            interpreter.set_tensor(input_details[0]['index'], img_array)
+
+            # Run inference
+            interpreter.invoke()
+
+            # Get output tensor
+            prediction = interpreter.get_tensor(output_details[0]['index'])
+            predicted_class = np.argmax(prediction)  # Get class with highest probability
+
+            # Display the result with confidence
+            result_label = class_labels[predicted_class]
+            confidence = prediction[0][predicted_class] * 100  # Confidence score
+
+            st.markdown('<h2 class="result">Prediction: {}</h2>'.format(result_label), unsafe_allow_html=True)
+            st.markdown('<p class="confidence">Confidence: {:.2f}%</p>'.format(confidence), unsafe_allow_html=True)
+    else:
+        st.write("No default images found in the current directory.")
 
 # Footer
 st.markdown(
