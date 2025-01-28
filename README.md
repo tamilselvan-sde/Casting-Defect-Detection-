@@ -13,13 +13,12 @@ This repository contains a machine learning project aimed at detecting defects i
 ## Repository Structure
 ```
 Casting-Defect-Detection/
-├── data/                   # Dataset folder
-├── models/                 # Saved trained models
-├── notebooks/              # Jupyter notebooks for experimentation
-├── app/                    # Streamlit app files
+├── app.py                   # Streamlit app files
+├── cast_ok_0_942.jpeg      # sample test image
+├── vibration_damper_failure_detection.ipynb             # Jupyter notebooks for experimentation
 ├── requirements.txt        # Python dependencies
 ├── README.md               # Project documentation
-└── main.py                 # Main script for the Streamlit app
+
 ```
 
 ## Installation
